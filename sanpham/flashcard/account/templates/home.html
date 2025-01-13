@@ -11,8 +11,8 @@
     }
     
     .study-square {
-    width: 0.6rem;
-    height: 0.6rem;
+    width: 0.8rem;
+    height: 0.8rem;
     border-radius: 0.15rem;
     transition: all 0.2s ease;
     cursor: pointer;
@@ -20,7 +20,7 @@
 
 .calendar-container {
     display: grid;
-    grid-template-columns: repeat(53, 1fr);
+    grid-template-columns: repeat(52, 1fr);
     gap: 0.2rem;
 }
 
@@ -139,7 +139,7 @@
                     </h3>
                 </div>
                 <div class="card-body p-3">
-                    <div id="study-calendar" class="d-flex flex-wrap" style="transform: scale(0.8); transform-origin: left top;"></div>
+                    <div id="study-calendar" style="transform: scale(0.8); transform-origin: left top;"></div>
                 </div>
             </div>
         </div>
@@ -239,7 +239,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const calendar = document.getElementById('study-calendar');
     const today = new Date();
-    const daysToShow = 365;
+    const daysToShow = 364;
     
     const studyData = JSON.parse('{{ study_data|safe }}');
     
@@ -279,12 +279,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         square.title = `${formattedDate}: ${hasStudied ? 'Studied' : 'No study'}`;
-        
+        color: 
         if (hasStudied) {
             square.style.backgroundColor = '#5b63b7';
             square.style.opacity = '0.8';
         } else {
-            square.style.backgroundColor = '#ebedf0';
+            square.style.backgroundColor = '#1fc20a';
         }
         
         square.onmouseover = function() {
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
     legend.className = 'calendar-legend';
     legend.innerHTML = `
         <div class="legend-item">
-            <div class="legend-square" style="background-color: #ebedf0;"></div>
+            <div class="legend-square" style="background-color:#1fc20a;"></div>
             <span>No study</span>
         </div>
         <div class="legend-item">
