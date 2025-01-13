@@ -9,59 +9,25 @@
     .stat-card {
         transition: all 0.3s ease;
     }
-    
-    .study-square {
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 0.15rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.calendar-container {
-    display: grid;
-    grid-template-columns: repeat(52, 1fr);
-    gap: 0.2rem;
-}
-
-.month-labels {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    margin-bottom: 0.5rem;
-    font-size: 0.75rem;
-    color: #666;
-}
-
-.calendar-legend {
-    margin-top: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    font-size: 0.75rem;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.legend-square {
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 0.15rem;
-}
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <div class="container py-4">
     <!-- User Stats Section -->
-    <div class="card shadow-sm mb-5" style="border-radius: 15px; border: none; background-color: #fbfbff;">
-        <div class="card-header d-flex align-items-center" style="background-color: #5b63b7; border-radius: 15px 15px 0 0;">
-            <i class="fas fa-user-circle text-white me-3 fs-3"></i>
-            <h2 class="mb-0 text-white">{{ profile.user.username }}'s Dashboard</h2>
+<div class="card shadow-sm mb-5" style="border-radius: 15px; border: none; background-color: #fbfbff;">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #5b63b7; border-radius: 15px 15px 0 0;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-user-circle text-white me-3 fs-3"></i>
+                <h2 class="mb-0 text-white">{{ profile.user.username }}'s Dashboard</h2>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'edit_profile' %}" class="btn btn-light btn-sm me-2">
+                    <i class="fas fa-user-edit me-1"></i> Edit Profile
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sign-out-alt me-1"></i> Log Out
+                </a>
+            </div>
         </div>
         <div class="card-body p-4">
             <div class="row g-4">
@@ -112,7 +78,6 @@
             </div>
         </div>
     </div>
-
     <!-- Messages Section -->
     {% if messages %}
     <div class="messages mb-4">
@@ -127,23 +92,77 @@
     </div>
     {% endif %}
 
-    <!-- Collection Stats and Streak Row -->
+    <!-- Collection Stats and Achivements -->
     <div class="row mb-5">
-        <!-- Streak Calendar Column -->
+        <!-- Achievements -->
         <div class="col-md-8">
             <div class="card shadow-sm h-100" style="border-radius: 15px; border: none; background-color: #fbfbff;">
                 <div class="card-header" style="background-color: #5b63b7; border-radius: 15px 15px 0 0;">
                     <h3 class="mb-0 text-white">
-                        <i class="fas fa-fire me-2"></i>
-                        Study Streak
+                        <i class="fas fa-award me-2"></i>
+                        Study Achievements
                     </h3>
                 </div>
-                <div class="card-body p-3">
-                    <div id="study-calendar" style="transform: scale(0.8); transform-origin: left top;"></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Bronze Achievement -->
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm text-center {% if profile.total_study_minutes < 5 %}opacity-50{% endif %}"
+                                style="border-left: 4px solid #CD7F32;">
+                                <i class="fas fa-medal fa-2x mb-2" style="color: #CD7F32;"></i>
+                                <h5 class="text-secondary mb-2">Bronze Scholar</h5>
+                                <small class="text-muted">Study for 5+ minutes</small>
+                            </div>
+                        </div>
+                        <!-- Silver Achievement -->
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm text-center {% if profile.total_study_minutes < 10 %}opacity-50{% endif %}"
+                                style="border-left: 4px solid #C0C0C0;">
+                                <i class="fas fa-medal fa-2x mb-2" style="color: #C0C0C0;"></i>
+                                <h5 class="text-secondary mb-2">Silver Scholar</h5>
+                                <small class="text-muted">Study for 10+ minutes</small>
+                            </div>
+                        </div>
+                        <!-- Gold Achievement -->
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm text-center {% if profile.total_study_minutes < 20 %}opacity-50{% endif %}"
+                                style="border-left: 4px solid #FFD700;">
+                                <i class="fas fa-medal fa-2x mb-2" style="color: #FFD700;"></i>
+                                <h5 class="text-secondary mb-2">Gold Scholar</h5>
+                                <small class="text-muted">Study for 20+ minutes</small>
+                            </div>
+                        </div>
+                        <!-- Sapphire Achievement -->
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm text-center {% if profile.total_study_minutes < 30 %}opacity-50{% endif %}"
+                                style="border-left: 4px solid #0F52BA;">
+                                <i class="fas fa-gem fa-2x mb-2" style="color: #0F52BA;"></i>
+                                <h5 class="text-secondary mb-2">Sapphire Scholar</h5>
+                                <small class="text-muted">Study for 30+ minutes</small>
+                            </div>
+                        </div>
+                        <!-- Emerald Achievement -->
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm text-center {% if profile.total_study_minutes < 40 %}opacity-50{% endif %}"
+                                style="border-left: 4px solid #50C878;">
+                                <i class="fas fa-gem fa-2x mb-2" style="color: #50C878;"></i>
+                                <h5 class="text-secondary mb-2">Emerald Scholar</h5>
+                                <small class="text-muted">Study for 40+ minutes</small>
+                            </div>
+                        </div>
+                        <!-- Dragonstone Achievement -->
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm text-center {% if profile.total_study_minutes < 50 %}opacity-50{% endif %}"
+                                style="border-left: 4px solid #FF0000;">
+                                <i class="fas fa-dragon fa-2x mb-2" style="color: #FF0000;"></i>
+                                <h5 class="text-secondary mb-2">Dragonstone Master</h5>
+                                <small class="text-muted">Study for 50+ minutes</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
         <!-- Deck & Card Stats Column -->
         <div class="col-md-4">
             <div class="card shadow-sm h-100" style="border-radius: 15px; border: none; background-color: #fbfbff;">
@@ -182,14 +201,8 @@
                 Your Decks
             </h2>
             <div class="btn-group">
-                <a href="{% url 'edit_profile' %}" class="btn btn-light btn-sm me-2">
-                    <i class="fas fa-user-edit me-1"></i> Edit Profile
-                </a>
                 <a href="{% url 'create_deck' %}" class="btn btn-light btn-sm me-2">
                     <i class="fas fa-plus me-1"></i> New Deck
-                </a>
-                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-sign-out-alt me-1"></i> Log Out
                 </a>
             </div>
         </div>
@@ -235,90 +248,4 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const calendar = document.getElementById('study-calendar');
-    const today = new Date();
-    const daysToShow = 364;
-    
-    const studyData = JSON.parse('{{ study_data|safe }}');
-    
-    // Month labels
-    const monthContainer = document.createElement('div');
-    monthContainer.className = 'month-labels';
-    
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    months.forEach(month => {
-        const label = document.createElement('div');
-        label.textContent = month;
-        monthContainer.appendChild(label);
-    });
-    
-    calendar.appendChild(monthContainer);
-    
-    // Week container
-    const weekContainer = document.createElement('div');
-    weekContainer.className = 'calendar-container';
-    calendar.appendChild(weekContainer);
-
-    for (let i = daysToShow - 1; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        
-        const dateStr = date.toISOString().split('T')[0];
-        const hasStudied = studyData[dateStr] || false;
-        
-        const square = document.createElement('div');
-        square.className = 'study-square';
-        
-        const formattedDate = date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        square.title = `${formattedDate}: ${hasStudied ? 'Studied' : 'No study'}`;
-        color: 
-        if (hasStudied) {
-            square.style.backgroundColor = '#5b63b7';
-            square.style.opacity = '0.8';
-        } else {
-            square.style.backgroundColor = '#1fc20a';
-        }
-        
-        square.onmouseover = function() {
-            if (hasStudied) {
-                this.style.opacity = '1';
-            }
-            this.style.transform = 'scale(1.2)';
-        };
-        
-        square.onmouseout = function() {
-            if (hasStudied) {
-                this.style.opacity = '0.8';
-            }
-            this.style.transform = 'scale(1)';
-        };
-        
-        weekContainer.appendChild(square);
-    }
-    
-    // Legend
-    const legend = document.createElement('div');
-    legend.className = 'calendar-legend';
-    legend.innerHTML = `
-        <div class="legend-item">
-            <div class="legend-square" style="background-color:#1fc20a;"></div>
-            <span>No study</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-square" style="background-color: #5b63b7; opacity: 0.8;"></div>
-            <span>Studied</span>
-        </div>
-    `;
-    
-    calendar.appendChild(legend);
-});
-</script>
 {% endblock %}

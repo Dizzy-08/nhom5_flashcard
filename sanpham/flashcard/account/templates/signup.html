@@ -17,21 +17,67 @@
     font-size: 0.875rem;
     margin-top: 0.25rem;
   }
+  
+  .password-strength {
+    height: 5px;
+    border-radius: 2px;
+    margin-top: 5px;
+    transition: all 0.3s ease;
+  }
+  
+  .strength-weak {
+    background-color: #dc3545;
+    width: 33%;
+  }
+  
+  .strength-medium {
+    background-color: #ffc107;
+    width: 66%;
+  }
+  
+  .strength-strong {
+    background-color: #28a745;
+    width: 100%;
+  }
+  
+  .password-requirements {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+  }
+  
+  .requirement-met {
+    color: #28a745;
+  }
+  
+  .password-toggle {
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+  }
+  
+  .form-floating {
+    position: relative;
+  }
+  
+  .form-control {
+    padding: 0.75rem 1rem;
+  }
 </style>
+
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-6">
       <div class="card shadow" style="border-radius: 15px;">
         <div class="card-header" style="background-color: #5b63b7; border-radius: 15px 15px 0 0;">
-          <h2 class="mb-0 text-white">
-            <i class="fas fa-graduation-cap me-2"></i>
-            Sign Up
-          </h2>
+          <h2 class="mb-0 text-white">Sign Up</h2>
         </div>
         <div class="card-body" style="background-color: #fbfbff;">
-          <form method="post">
+          <form method="post" id="signupForm" novalidate>
             {% csrf_token %}
-            
             {% if form.non_field_errors %}
             <div class="alert alert-danger" role="alert">
               {% for error in form.non_field_errors %}
@@ -39,17 +85,37 @@
               {% endfor %}
             </div>
             {% endif %}
-
+            
             {% for field in form %}
             <div class="mb-3">
-              <label for="{{ field.id_for_label }}" class="form-label" style="color: #2d3142;">
-                {{ field.label }}
-              </label>
-              {% if field.errors %}
-                {{ field|add_class:"form-control is-invalid"|attr:"style:border-color: #dc3545; border-radius: 10px;" }}
-              {% else %}
-                {{ field|add_class:"form-control"|attr:"style:border-color: #9ba3eb; border-radius: 10px;" }}
-              {% endif %}
+              <div class="form-floating position-relative">
+
+                {% if field.errors %}
+                  {{ field|add_class:"form-control is-invalid"|attr:"style:border-color: #dc3545; border-radius: 10px;" }}
+                {% else %}
+                  {{ field|add_class:"form-control"|attr:"style:border-color: #9ba3eb; border-radius: 10px;" }}
+                {% endif %}
+                
+                {% if 'password' in field.name %}
+                <span class="password-toggle" onclick="togglePassword('{{ field.id_for_label }}')">
+                  <i class="fas fa-eye"></i>
+                </span>
+                {% if field.name == 'password1' %}
+                <div class="password-strength" id="passwordStrength"></div>
+                <div class="password-requirements" id="passwordRequirements">
+                  <div id="length"><i class="fas fa-circle fa-xs me-2"></i>At least 8 characters</div>
+                  <div id="uppercase"><i class="fas fa-circle fa-xs me-2"></i>At least one uppercase letter</div>
+                  <div id="number"><i class="fas fa-circle fa-xs me-2"></i>At least one number</div>
+                  <div id="special"><i class="fas fa-circle fa-xs me-2"></i>At least one special character</div>
+                </div>
+                {% endif %}
+                {% endif %}
+                
+                <label for="{{ field.id_for_label }}" class="form-label" style="color: #2d3142;">
+                  {{ field.label }}
+                </label>
+              </div>
+              
               {% if field.errors %}
                 {% for error in field.errors %}
                   <div class="error-message">
@@ -62,19 +128,20 @@
               {% endif %}
             </div>
             {% endfor %}
+            
             <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-lg" 
+              <button type="submit" class="btn btn-lg" id="submitButton"
                       style="background-color: #5b63b7; color: white; border-radius: 10px; 
                              transition: all 0.3s ease-in-out;"
                       onmouseover="this.style.backgroundColor='#4850a3'"
                       onmouseout="this.style.backgroundColor='#5b63b7'">
-                Sign Up
+Sign Up
               </button>
-              <center>
-                <a href="{% url 'login' %}">
-                  Already have an account? Log In
+              <div class="text-center mt-3">
+                <a href="{% url 'login' %}" class="text-decoration-none">
+Already have an account? Log In
                 </a>
-              </center>
+              </div>
             </div>
           </form>
         </div>
@@ -82,4 +149,117 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('signupForm');
+  const password1Input = document.querySelector('input[name="password1"]');
+  const password2Input = document.querySelector('input[name="password2"]');
+  const strengthIndicator = document.getElementById('passwordStrength');
+  const submitButton = document.getElementById('submitButton');
+  const requirements = {
+    length: document.getElementById('length'),
+    uppercase: document.getElementById('uppercase'),
+    number: document.getElementById('number'),
+    special: document.getElementById('special')
+  };
+
+  // Real-time password validation
+  password1Input.addEventListener('input', function() {
+    const password = this.value;
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password)
+    };
+
+    // Update requirements UI
+    Object.keys(checks).forEach(key => {
+      const element = requirements[key].querySelector('i');
+      if (checks[key]) {
+        element.className = 'fas fa-check-circle fa-xs me-2';
+        requirements[key].classList.add('requirement-met');
+      } else {
+        element.className = 'fas fa-circle fa-xs me-2';
+        requirements[key].classList.remove('requirement-met');
+      }
+    });
+
+    // Update strength indicator
+    const strength = Object.values(checks).filter(Boolean).length;
+    strengthIndicator.className = 'password-strength';
+    if (strength <= 2) {
+      strengthIndicator.classList.add('strength-weak');
+    } else if (strength === 3) {
+      strengthIndicator.classList.add('strength-medium');
+    } else {
+      strengthIndicator.classList.add('strength-strong');
+    }
+
+    // Check password match
+    if (password2Input.value) {
+      validatePasswordMatch();
+    }
+  });
+
+  // Password match validation
+  function validatePasswordMatch() {
+    if (password1Input.value !== password2Input.value) {
+      password2Input.classList.add('is-invalid');
+      password2Input.parentElement.querySelector('.error-message')?.remove();
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = 'Passwords do not match';
+      password2Input.parentElement.appendChild(errorDiv);
+      return false;
+    } else {
+      password2Input.classList.remove('is-invalid');
+      password2Input.parentElement.querySelector('.error-message')?.remove();
+      return true;
+    }
+  }
+
+  password2Input.addEventListener('input', validatePasswordMatch);
+
+  // Form submission validation
+  form.addEventListener('submit', function(e) {
+    if (!validatePasswordMatch()) {
+      e.preventDefault();
+    }
+  });
+
+  // Email validation
+  const emailInput = document.querySelector('input[type="email"]');
+  if (emailInput) {
+    emailInput.addEventListener('input', function() {
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value);
+      if (!isValid && this.value) {
+        this.classList.add('is-invalid');
+        this.parentElement.querySelector('.error-message')?.remove();
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = 'Please enter a valid email address';
+        this.parentElement.appendChild(errorDiv);
+      } else {
+        this.classList.remove('is-invalid');
+        this.parentElement.querySelector('.error-message')?.remove();
+      }
+    });
+  }
+});
+
+function togglePassword(inputId) {
+  const input = document.getElementById(inputId);
+  const icon = input.nextElementSibling.querySelector('i');
+  
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+</script>
 {% endblock %}

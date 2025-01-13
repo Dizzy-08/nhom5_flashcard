@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load custom_filters %}
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
@@ -80,7 +81,6 @@
     font-size: 1.2rem;
     color: #5b63b7;
   }
-
 </style>
 
 <div class="container mt-5">
@@ -103,14 +103,10 @@
           Card {{ current_card_number }} of {{ total_cards }}
         </div>
         <div class="timer" id="timer">00:00</div>
-        <div>
-          <i class="fas fa-check-circle me-2"></i>
-          Progress: {{ current_card_number|divisibleby:total_cards|floatformat:1 }}%
-        </div>
       </div>
 
       <div class="progress-bar">
-        <div class="progress-fill" style="width: {{ current_card_number|divisibleby:total_cards }}%;"></div>
+        <div class="progress-fill" style="width: {% widthratio current_card_number total_cards 100 %}%;"></div>
       </div>
 
       <div class="study-card">
@@ -156,28 +152,44 @@
 
 <script>
 // Timer functionality
-let startTime = new Date().getTime();
+const sessionKey = 'studySession_' + '{{ study_session.id }}';
 
-function updateTimer() {
-  const currentTime = new Date().getTime();
-  const timeDiff = currentTime - startTime;
-  const minutes = Math.floor(timeDiff / 60000);
-  const seconds = Math.floor((timeDiff % 60000) / 1000);
-  
-  document.getElementById('timer').textContent = 
-    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+// Initialize or get existing start time
+if (!localStorage.getItem(sessionKey)) {
+    localStorage.setItem(sessionKey, new Date().getTime());
 }
 
+function updateTimer() {
+    const startTime = parseInt(localStorage.getItem(sessionKey));
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - startTime;
+    const minutes = Math.floor(timeDiff / 60000);
+    const seconds = Math.floor((timeDiff % 60000) / 1000);
+    
+    document.getElementById('timer').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Update timer immediately and then every second
+updateTimer();
 setInterval(updateTimer, 1000);
+
+// Cleanup localStorage when leaving the page
+window.addEventListener('beforeunload', function() {
+    // Only clean up if this is the last card
+    if ({{ current_card_number }} >= {{ total_cards }}) {
+        localStorage.removeItem(sessionKey);
+    }
+});
 
 // Keyboard shortcuts for options
 document.addEventListener('keydown', function(e) {
-  const options = document.querySelectorAll('.answer-option');
-  const num = parseInt(e.key);
-  
-  if (num > 0 && num <= options.length) {
-    options[num-1].click();
-  }
+    const options = document.querySelectorAll('.answer-option');
+    const num = parseInt(e.key);
+    
+    if (num > 0 && num <= options.length) {
+        options[num-1].click();
+    }
 });
 </script>
 {% endblock %}
