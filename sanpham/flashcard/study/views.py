@@ -5,6 +5,8 @@ from collection.models import Deck, Card
 from .models import StudySession, CardProgress
 from django.contrib import messages
 from django.utils import timezone
+from datetime import datetime, timedelta
+import json
 
 
 @login_required

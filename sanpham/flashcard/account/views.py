@@ -6,6 +6,10 @@ from collection.models import Deck
 from django.contrib.auth import update_session_auth_hash
 from .forms import UserEditForm, PasswordChangeCustomForm
 from django.contrib.auth.decorators import login_required
+import calendar
+from datetime import datetime, timedelta
+import json
+from study.models import StudySession
 
 
 def signup_view(request):
@@ -49,12 +53,31 @@ def home(request):
     if request.user.is_authenticated:
         decks = Deck.objects.filter(user=request.user)
         profile = request.user.profile
+        today = datetime.now().date()
+        year_ago = today - timedelta(days=365)
+
+        study_sessions = StudySession.objects.filter(
+            user=request.user,
+            started_at__gte=year_ago,
+            ended_at__isnull=False,  # Only count completed sessions
+        ).values_list("started_at", flat=True)
+
+        # Create a dictionary of study days
+        study_data = {}
+        for session_datetime in study_sessions:
+            # Convert to date string in YYYY-MM-DD format
+            date_str = session_datetime.strftime("%Y-%m-%d")
+            study_data[date_str] = True
+
+        total_cards = sum(deck.card_set.count() for deck in decks)
 
         context = {
             "decks": decks,
             "profile": profile,
             "xp_to_next_level": 100 - (profile.xp % 100),  # XP needed for next level
             "xp_progress": (profile.xp % 100),  # Progress within current level
+            "study_data": json.dumps(study_data),
+            "total_cards": total_cards,
         }
         return render(request, "home.html", context)
     else:

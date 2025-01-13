@@ -1,19 +1,205 @@
 {% extends 'base.html' %}
-
+{% load widget_tweaks %}
 {% block content %}
-<div class="container">
-    <h1>Session Complete!</h1>
-    
-    <div class="rewards-summary">
-        <h2>Rewards</h2>
-        <p>XP Gained: +{{ xp_gained }}</p>
-        <p>Total XP: {{ total_xp }}</p>
-        <p>Current Level: {{ level }}</p>
-        <p>Current Streak: {{ streak }} days</p>
-        <p>Study Time: {{ study_minutes }} minutes</p>
-        <p>Total Study Time: {{ total_study_minutes|floatformat:2 }} minutes</p>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  .celebration-container {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #5b63b7, #6e75d1);
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 25px rgba(91, 99, 183, 0.2);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(91, 99, 183, 0.15);
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #5b63b7;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .progress-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 1rem auto;
+  }
+
+  .level-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+    animation: confetti-fall 3s ease-in-out infinite;
+  }
+
+  @keyframes confetti-fall {
+    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+  }
+
+  .return-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background-color: #5b63b7;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 2rem;
+  }
+
+  .return-btn:hover {
+    background-color: #4850a3;
+    transform: translateY(-2px);
+  }
+</style>
+
+<div class="container mt-5">
+  <div class="celebration-container">
+    <i class="fas fa-trophy fa-3x mb-4"></i>
+    <h1 class="mb-3">Congratulations! 🎉</h1>
+    <p class="mb-0">You've completed your study session!</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">XP Gained</div>
+      <div class="stat-value">
+        <i class="fas fa-star text-warning"></i>
+        +{{ xp_gained }}
+      </div>
+      <div>Total XP: {{ total_xp }}</div>
     </div>
 
-    <a href="{% url 'home' %}" class="btn btn-primary">Return to Home</a>
+    <div class="stat-card">
+      <div class="stat-label">Level</div>
+      <div class="progress-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" stroke-width="12"/>
+          <circle cx="60" cy="60" r="54" fill="none" stroke="#5b63b7" stroke-width="12"
+                  stroke-dasharray="339.292" stroke-dashoffset="0"
+                  transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="level-info">
+          <div style="font-size: 2rem; font-weight: bold;">{{ level }}</div>
+          <div style="font-size: 0.8rem;">LEVEL</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Daily Streak</div>
+      <div class="stat-value">
+        <i class="fas fa-fire text-danger"></i>
+        {{ streak }}
+      </div>
+      <div>Days</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Study Time</div>
+      <div class="stat-value">
+        <i class="fas fa-clock text-info"></i>
+        {{ study_minutes }}
+      </div>
+      <div>Total: {{ total_study_minutes|floatformat:2 }} minutes</div>
+    </div>
+  </div>
+
+  <div class="text-center">
+    <a href="{% url 'home' %}" class="return-btn">
+      <i class="fas fa-home"></i>
+      Return to Home
+    </a>
+  </div>
 </div>
+
+<script>
+// Create confetti effect
+function createConfetti() {
+  const colors = ['#5b63b7', '#ffd700', '#ff6b6b', '#4ecdc4'];
+  
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.animationDelay = Math.random() * 3 + 's';
+    document.body.appendChild(confetti);
+    
+    // Remove confetti after animation
+    setTimeout(() => confetti.remove(), 3000);
+  }
+}
+
+// Animate numbers
+function animateValue(element, start, end, duration) {
+  let current = start;
+  const range = end - start;
+  const increment = range / (duration / 16);
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      clearInterval(timer);
+      current = end;
+    }
+    element.textContent = Math.round(current);
+  }, 16);
+}
+
+// Run animations on page load
+document.addEventListener('DOMContentLoaded', () => {
+  createConfetti();
+  setInterval(createConfetti, 3000); // Create new confetti every 3 seconds
+  
+  // Animate XP
+  const xpElement = document.querySelector('.stat-value');
+  animateValue(xpElement, 0, {{ xp_gained }}, 1000);
+});
+</script>
 {% endblock %}

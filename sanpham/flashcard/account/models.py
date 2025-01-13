@@ -25,48 +25,36 @@ class Profile(models.Model):
     def update_streak(self, study_date, study_minutes):
         print(f"DEBUG - Current last_study_date: {self.last_study_date}")
         print(f"DEBUG - New study_date: {study_date}")
-        print(f"DEBUG - Study minutes: {study_minutes}")
         print(f"DEBUG - Current streak: {self.streak}")
 
-        # If total study time is at least 1 minute
-        if self.total_study_minutes >= 0:
-            if not self.last_study_date:
-                # First time studying
-                self.streak = 1
-            elif self.last_study_date != study_date:
-                # Different day
-                if study_date - self.last_study_date == timedelta(days=1):
-                    # Consecutive day
-                    self.streak += 1
-                else:
-                    # Not consecutive, reset streak
-                    self.streak = 1
-                # Reset daily study minutes on new day
-                self.total_study_minutes = 0
+        if self.streak == 0:
+            # First time ever visiting
+            self.streak = 1
+        else:
+            days_diff = (study_date - self.last_study_date).days
 
-        # Update study time and date
-        self.total_study_minutes = round(
-            self.total_study_minutes + float(study_minutes), 2
-        )  # Round to 2 decimal places
-        # self.total_study_minutes += 1
+            if days_diff == 0:
+                # Same day visit - do nothing to streak
+                pass
+            elif days_diff == 1:
+                # Next day visit - increase streak
+                self.streak += 1
+            else:
+                # Gap in visits - reset streak
+                self.streak = 1
+
+        # Always update the last study date
         self.last_study_date = study_date
 
-        """
-        # Update streak logic
-        if not self.last_study_date:
-            self.streak = 1
-        elif self.last_study_date == study_date - timedelta(days=1):
-            self.streak += 1
-        elif self.last_study_date == study_date:
-            pass
-        else:
-            self.streak = 1
-        """
-
+        # Update study minutes
+        self.total_study_minutes = round(
+            self.total_study_minutes + float(study_minutes), 2
+        )
         self.save()
 
-        # Add XP for completing a study session
+        # Add XP for the session
         self.add_xp(50)
+
         print(f"DEBUG - New streak: {self.streak}")
         print(f"DEBUG - New total_study_minutes: {self.total_study_minutes}")
 
