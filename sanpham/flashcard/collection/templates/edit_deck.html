@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>{% if deck %}Edit Deck{% else %}Create New Deck{% endif %}</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+  <a href="{% url 'home' %}">Home</a>
+  </form>
+
+  {% if deck %}
+    <h3>Cards</h3>
+    <table>
+      <tr>
+        <th>Front</th>
+        <th>Back</th>
+      </tr>
+      <a href="{% url 'delete_deck' deck.id %}">Delete Deck</a>
+      {% for card in deck.card_set.all %}  {# Access cards related to the deck #}
+        <tr>
+          <td>{{ card.front }}</td>
+          <td>{{ card.back }}</td>
+          <td><a href="{% url 'edit_card' deck.id card.id %}">Edit</a></td>
+          <td><a href="{% url 'delete_card' deck.id card.id %}">Delete</a></td>
+        </tr>
+      {% endfor %}
+      <a href="{% url 'create_card' deck.id %}">Add Card</a>
+    </table>
+  {% endif %}
+{% endblock %}

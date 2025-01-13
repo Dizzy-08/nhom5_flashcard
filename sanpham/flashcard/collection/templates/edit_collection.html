@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <div>
+    <h2>My Decks</h2>
+
+    <form method="GET" action="{% url 'edit_collection' %}"> 
+        <input type="text" name="q" placeholder="Search decks...">
+        <button type="submit">Search</button>
+    </form>
+
+    <div>
+      <a href="{% url 'create_deck' %}">Create New Deck</a>
+      <a href="{% url 'logout' %}">Log Out</a>
+    </div>
+  </div>
+
+  <ul>
+    {% for deck in decks %}
+      <li>
+        <div>
+        <header>{{ deck.title }}</header>
+        <p>{{ deck.description }}</p>
+        <div>
+        <a href="{% url 'edit_deck' deck.id %}">Edit</a>
+        <a href="{% url 'delete_deck' deck.id %}">Delete</a>
+        <a href="{% url 'create_card' deck.id %}">Add Card</a>
+        </div>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <a href="{% url "home" %}">Home</a>
+{% endblock %}

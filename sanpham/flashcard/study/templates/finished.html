@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Session Complete!</h1>
+    
+    <div class="rewards-summary">
+        <h2>Rewards</h2>
+        <p>XP Gained: +{{ xp_gained }}</p>
+        <p>Total XP: {{ total_xp }}</p>
+        <p>Current Level: {{ level }}</p>
+        <p>Current Streak: {{ streak }} days</p>
+        <p>Study Time: {{ study_minutes }} minutes</p>
+        <p>Total Study Time: {{ total_study_minutes|floatformat:2 }} minutes</p>
+    </div>
+
+    <a href="{% url 'home' %}" class="btn btn-primary">Return to Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Studying: {{ study_session.deck.title }}</h1>
+
+<div class="card-info">
+    Card {{ current_card_number }} / {{ total_cards }} 
+</div>
+
+<div class="card">
+    <div class="card-front">{{ current_card.front }}</div>
+</div>
+
+<form method="post" action="{% url 'check_answer' study_session.id %}">
+    {% csrf_token %}
+    <div class="options">
+        {% for card in all_cards %}
+            <button type="submit" name="selected_card" value="{{ card.id }}">{{ card.back }}</button>
+        {% endfor %}
+        {% for message in messages %}
+            {% if 'error' in message.tags %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <a href="{% url 'home' %}">Home</a>
+</form>
+
+{% endblock %}
