@@ -11,7 +11,7 @@ class Profile(models.Model):
     xp = models.PositiveIntegerField(default=0)
     level = models.PositiveIntegerField(default=1)
     streak = models.PositiveIntegerField(default=0)
-    last_study_date = models.DateField(null=True, blank=True)
+    last_study_date = models.DateField(default=timezone.now, null=True, blank=True)
     total_study_minutes = models.FloatField(default=0)  # To track daily study time
 
     def add_xp(self, amount):

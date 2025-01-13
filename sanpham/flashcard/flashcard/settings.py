@@ -37,8 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "tz",
     # add apps
+    "tz",
+    "widget_tweaks",
     "account.apps.AccountConfig",
     "collection.apps.CollectionConfig",
     "study.apps.StudyConfig",

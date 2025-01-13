@@ -1,20 +1,77 @@
 {% extends "base.html" %}
-
+{% load widget_tweaks %}
 {% block content %}
-<div>
-  <div>
-    <h2>Log In</h2>
-  </div>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
 
-  <div id="buttons">
-    <button type="submit">Log In</button>
-    <a href="{% url 'signup' %}" class="button is-info">Sign Up</a>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+  .form-control:focus {
+    border-color: #5b63b7;
+    box-shadow: 0 0 0 0.2rem rgba(91, 99, 183, 0.25);
+  }
+  
+  .btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(91, 99, 183, 0.25);
+  }
+
+  .form-control {
+    transition: transform 0.2s ease;
+  }
+
+  .form-control:focus {
+    transform: scale(1.01);
+  }
+</style>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow" style="border-radius: 15px;">
+        <div class="card-header" style="background-color: #5b63b7; border-radius: 15px 15px 0 0;">
+          <h2 class="mb-0 text-white">
+            <i class="fas fa-user-graduate me-2"></i>
+            Log In
+          </h2>
+        </div>
+        <div class="card-body" style="background-color: #fbfbff;">
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label" style="color: #2d3142;">
+                {{ field.label }}
+              </label>
+              {{ field|add_class:"form-control"|attr:"style:border-color: #9ba3eb; border-radius: 10px;" }}
+              {% if field.errors %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback d-block">
+                    {{ error }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+              {% if field.help_text %}
+                <small class="form-text" style="color: #6c757d;">{{ field.help_text }}</small>
+              {% endif %}
+            </div>
+            {% endfor %}
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-lg" 
+                      style="background-color: #5b63b7; color: white; border-radius: 10px; 
+                             transition: all 0.3s ease-in-out;"
+                      onmouseover="this.style.backgroundColor='#4850a3'"
+                      onmouseout="this.style.backgroundColor='#5b63b7'">
+                Log In
+              </button>
+              <center>
+              <a href="{% url 'signup' %}">
+                Don't have an account? Sign up now!
+              </a>
+              </center>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-</form>
 </div>
-            
 
 {% endblock %}
