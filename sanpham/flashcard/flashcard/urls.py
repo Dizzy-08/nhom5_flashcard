@@ -28,6 +28,7 @@ urlpatterns = [
     path("account/", include("account.urls")),
     path("collection/", include("collection.urls")),
     path("study/", include("study.urls")),
+    path("games/", include("games.urls")),
     path("", RedirectView.as_view(url="account/", permanent=True)),
 ]
 

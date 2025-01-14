@@ -55,69 +55,62 @@ def check_answer(request, session_id):
     cards = list(Card.objects.filter(deck=study_session.deck))
     current_card_index = request.session.get("current_card_index", 0)
     current_card = cards[current_card_index]
+
+    # Get the selected card
     selected_card_id = int(request.POST.get("selected_card"))
 
-    if CardProgress.objects.filter(study_session=study_session).count() == len(cards):
-        print(f"DEBUG - Starting session end process")
-        print(
-            f"DEBUG - Profile study minutes before: {request.user.profile.total_study_minutes}"
-        )
-        study_session.end_session()
-        print(
-            f"DEBUG - Profile study minutes after: {request.user.profile.total_study_minutes}"
-        )
-
     if selected_card_id == current_card.id:
+        # Record correct answer
         card_progress, created = CardProgress.objects.get_or_create(
             study_session=study_session, card=current_card
         )
         card_progress.is_correct = True
         card_progress.save()
 
+        # Check if session is complete
         if CardProgress.objects.filter(study_session=study_session).count() == len(
             cards
         ):
-            # End the session using the model method
-            study_session.end_session()  # This will handle all profile updates
-
+            # End the session and get XP gained
+            xp_gained = study_session.end_session()
             profile = request.user.profile
-            messages.success(
-                request,
-                f"Session completed! You earned 50 XP and now have {profile.xp} XP (Level {profile.level})",
-            )
 
             # Clean up session
-            if "session_start_time" in request.session:
-                del request.session["session_start_time"]
-            if "current_card_index" in request.session:
-                del request.session["current_card_index"]
+            request.session.pop("session_start_time", None)
+            request.session.pop("current_card_index", None)
 
-            # Calculate duration for template display
+            # Calculate duration
             duration_minutes = round(
-                (
-                    study_session.ended_at.timestamp()
-                    - study_session.started_at.timestamp()
-                )
+                (study_session.ended_at - study_session.started_at).total_seconds()
                 / 60,
                 2,
             )
+
+            # Show completion message
+            messages.success(
+                request,
+                f"Session completed! You earned {xp_gained} XP and now have {profile.xp} XP (Level {profile.level})",
+            )
+            print(f"XP gained {xp_gained}")
 
             return render(
                 request,
                 "finished.html",
                 {
-                    "xp_gained": 50,
+                    "xp_gained": xp_gained,
                     "total_xp": profile.xp,
                     "level": profile.level,
                     "streak": profile.streak,
-                    "study_minutes": round(duration_minutes, 1),
-                    "total_study_minutes": round(profile.total_study_minutes, 2),
+                    "study_minutes": duration_minutes,
+                    "total_study_minutes": profile.total_study_minutes,
                 },
             )
 
+        # Move to next card
         current_card_index = (current_card_index + 1) % len(cards)
         request.session["current_card_index"] = current_card_index
         return redirect("study_session", session_id=session_id)
+
     else:
         messages.error(request, "Incorrect answer. Try again!")
         return redirect("study_session", session_id=session_id)

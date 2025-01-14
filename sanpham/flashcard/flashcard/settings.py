@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "account.apps.AccountConfig",
     "collection.apps.CollectionConfig",
     "study.apps.StudyConfig",
+    "games.apps.GamesConfig",
 ]
 
 MIDDLEWARE = [

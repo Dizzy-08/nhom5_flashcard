@@ -96,7 +96,30 @@
     background-color: #4850a3;
     transform: translateY(-2px);
   }
+
+   .xp-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .boss-effect {
+    font-size: 0.9rem;
+    color: #ff4444;
+    margin-top: 0.5rem;
+  }
+
+  @keyframes numberCount {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-value {
+    animation: numberCount 0.5s ease-out forwards;
+  }
 </style>
+
 
 <div class="container mt-5">
   <div class="celebration-container">
@@ -108,24 +131,22 @@
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-label">XP Gained</div>
-      <div class="stat-value">
-        <i class="fas fa-star text-warning"></i>
-        +{{ xp_gained }}
-      </div>
-      <div>Total XP: {{ total_xp }}</div>
+      <div class="xp-value" id="xpCounter">{{ xp_gained }}</div>
+      <div class="mt-2">Total XP: <span id="totalXpCounter">{{ total_xp }}</span></div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-label">Level</div>
+      <div class="stat-label">Level Progress</div>
       <div class="progress-ring">
         <svg width="120" height="120" viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" stroke-width="12"/>
           <circle cx="60" cy="60" r="54" fill="none" stroke="#5b63b7" stroke-width="12"
-                  stroke-dasharray="339.292" stroke-dashoffset="0"
+                  stroke-dasharray="339.292" 
+                  stroke-dashoffset="{{ level_progress_offset }}"
                   transform="rotate(-90 60 60)"/>
         </svg>
         <div class="level-info">
-          <div style="font-size: 2rem; font-weight: bold;">{{ level }}</div>
+          <div style="font-size: 2rem; font-weight: bold;" id="levelCounter">{{ level }}</div>
           <div style="font-size: 0.8rem;">LEVEL</div>
         </div>
       </div>
@@ -135,7 +156,7 @@
       <div class="stat-label">Daily Streak</div>
       <div class="stat-value">
         <i class="fas fa-fire text-danger"></i>
-        {{ streak }}
+        <span id="streakCounter">{{ streak }}</span>
       </div>
       <div>Days</div>
     </div>
@@ -144,9 +165,9 @@
       <div class="stat-label">Study Time</div>
       <div class="stat-value">
         <i class="fas fa-clock text-info"></i>
-        {{ study_minutes }}
+        <span id="minutesCounter">{{ study_minutes }}</span>
       </div>
-      <div>Total: {{ total_study_minutes|floatformat:2 }} minutes</div>
+      <div>Total Today: {{ total_study_minutes }} minutes</div>
     </div>
   </div>
 
@@ -159,10 +180,46 @@
 </div>
 
 <script>
-// Create confetti effect
+function animateValue(obj, start, end, duration) {
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    const value = Math.floor(progress * (end - start) + start);
+    obj.innerHTML = value;
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+  window.requestAnimationFrame(step);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Create confetti
+  createConfetti();
+  setInterval(createConfetti, 3000);
+  
+  // Animate counters
+  animateValue(document.getElementById('xpCounter'), 0, {{ xp_gained }}, 1500);
+  animateValue(document.getElementById('streakCounter'), 0, {{ streak }}, 1000);
+  animateValue(document.getElementById('minutesCounter'), 0, {{ study_minutes }}, 1000);
+  
+  // Calculate and animate level progress
+  const totalXp = {{ total_xp }};
+  const currentLevel = {{ level }};
+  const xpInCurrentLevel = totalXp % 100;
+  const progressCircle = document.querySelector('.progress-ring circle:last-child');
+  const circumference = 339.292;
+  const offset = circumference - (xpInCurrentLevel / 100) * circumference;
+  progressCircle.style.strokeDashoffset = circumference;
+  setTimeout(() => {
+    progressCircle.style.strokeDashoffset = offset;
+    progressCircle.style.transition = 'stroke-dashoffset 1s ease-in-out';
+  }, 500);
+});
+
 function createConfetti() {
   const colors = ['#5b63b7', '#ffd700', '#ff6b6b', '#4ecdc4'];
-  
   for (let i = 0; i < 50; i++) {
     const confetti = document.createElement('div');
     confetti.className = 'confetti';
@@ -170,35 +227,8 @@ function createConfetti() {
     confetti.style.left = Math.random() * 100 + 'vw';
     confetti.style.animationDelay = Math.random() * 3 + 's';
     document.body.appendChild(confetti);
-    
-    // Remove confetti after animation
     setTimeout(() => confetti.remove(), 3000);
   }
 }
-
-// Animate numbers
-function animateValue(element, start, end, duration) {
-  let current = start;
-  const range = end - start;
-  const increment = range / (duration / 16);
-  const timer = setInterval(() => {
-    current += increment;
-    if (current >= end) {
-      clearInterval(timer);
-      current = end;
-    }
-    element.textContent = Math.round(current);
-  }, 16);
-}
-
-// Run animations on page load
-document.addEventListener('DOMContentLoaded', () => {
-  createConfetti();
-  setInterval(createConfetti, 3000); // Create new confetti every 3 seconds
-  
-  // Animate XP
-  const xpElement = document.querySelector('.stat-value');
-  animateValue(xpElement, 0, {{ xp_gained }}, 1000);
-});
 </script>
 {% endblock %}

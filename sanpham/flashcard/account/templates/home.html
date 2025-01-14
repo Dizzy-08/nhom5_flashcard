@@ -92,6 +92,132 @@
     </div>
     {% endif %}
 
+    <!-- Boss Battle Section -->
+<div class="card shadow-sm mb-5" style="border-radius: 15px; border: none; background-color: #fbfbff;">
+    <div class="card-header" style="background-color: #5b63b7; border-radius: 15px 15px 0 0;">
+        <h3 class="mb-0 text-white">
+            <i class="fas fa-crown me-2"></i>
+            Current Boss Battle
+        </h3>
+    </div>
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <!-- Boss Icon and Info -->
+            <div class="col-md-3 text-center">
+                <div class="boss-avatar mb-3">
+                    <i class="fas {{ boss_icon }} fa-4x" 
+                       style="color: {% if active_boss.boss_type == 'CTHULHU' %}#ff4444
+                              {% elif active_boss.boss_type == 'NYARLATHOTEP' %}#ffd700
+                              {% elif active_boss.boss_type == 'HASTUR' %}#4444ff
+                              {% else %}#44ff44{% endif %};">
+                    </i>
+                </div>
+                <h4 class="boss-name">{{ active_boss.name }}</h4>
+                <p class="text-muted">{{ active_boss.get_boss_type_display }}</p>
+            </div>
+            
+            <!-- Boss Health Bar and Status -->
+            <div class="col-md-6">
+                <div class="boss-health mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Boss Health</span>
+                        <span>{{ active_boss.current_health }}/{{ active_boss.max_health }}</span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-danger" 
+                             role="progressbar" 
+                             style="width: {{ boss_health_percent }}%"
+                             aria-valuenow="{{ boss_health_percent }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ boss_health_percent|floatformat:1 }}%
+                        </div>
+                    </div>
+                </div>
+                <div class="boss-description">
+                    <p class="mb-0"><i class="fas fa-info-circle me-2"></i><em>{{ active_boss.description }}</em></p>
+                </div>
+            </div>
+            
+            <!-- Battle Stats -->
+            <div class="col-md-3">
+                <div class="stat-card p-3 bg-white rounded shadow-sm mb-3" 
+                     style="border-left: 4px solid #ff4444;">
+                    <h6 class="text-secondary mb-2">
+                        <i class="fas fa-fist-raised me-2"></i>
+                        Damage Per Study
+                    </h6>
+                    <p class="mb-0 fs-5">{{ active_boss.damage_per_study }} DMG</p>
+                </div>
+                <div class="stat-card p-3 bg-white rounded shadow-sm" 
+                     style="border-left: 4px solid #44ff44;">
+                    <h6 class="text-secondary mb-2">
+                        <i class="fas fa-sword me-2"></i>
+                        Total Damage Dealt
+                    </h6>
+                    <p class="mb-0 fs-5">{{ boss_progress.damage_dealt }} DMG</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boss Ability Section -->
+        <div class="mt-4">
+            <h5 class="mb-3">
+                <i class="fas fa-magic me-2"></i>
+                Boss Ability
+            </h5>
+            <div class="card bg-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="ability-icon me-3">
+                            <i class="fas {{ boss_ability_icon }} fa-2x" 
+                               style="color: {% if active_boss.boss_type == 'CTHULHU' %}#ff4444
+                                      {% elif active_boss.boss_type == 'NYARLATHOTEP' %}#ffd700
+                                      {% elif active_boss.boss_type == 'HASTUR' %}#4444ff
+                                      {% else %}#44ff44{% endif %};">
+                            </i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">{{ boss_ability_name }}</h6>
+                            <p class="mb-0 text-muted">{{ boss_ability_description }}</p>
+                            {% if boss_ability_effect %}
+                            <div class="mt-2 p-2 bg-light rounded">
+                                <small class="text-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Current Effect: {{ boss_ability_effect }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Items Section -->
+        {% if active_items %}
+        <div class="mt-4">
+            <h5 class="mb-3"><i class="fas fa-scroll me-2"></i>Active Power-ups</h5>
+            <div class="row g-3">
+                {% for user_item in active_items %}
+                <div class="col-md-3">
+                    <div class="stat-card p-2 bg-white rounded shadow-sm">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-flask me-2" style="color: #5b63b7;"></i>
+                            <div>
+                                <h6 class="mb-0">{{ user_item.item.name }}</h6>
+                                <small class="text-muted">{{ user_item.item.get_item_type_display }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
     <!-- Collection Stats and Achivements -->
     <div class="row mb-5">
         <!-- Achievements -->
