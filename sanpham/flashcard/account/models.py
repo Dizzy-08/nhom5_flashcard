@@ -2,7 +2,10 @@ from django.db import models
 from datetime import timedelta
 from django.contrib.auth.models import User  # Use default user model
 from django.utils import timezone
+from datetime import date
 
+def default_last_study_date():
+    return timezone.now().date()
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -11,10 +14,8 @@ class Profile(models.Model):
     xp = models.PositiveIntegerField(default=0)
     level = models.PositiveIntegerField(default=1)
     streak = models.PositiveIntegerField(default=0)
-    last_study_date = models.DateField(
-        default=timezone.now().date, null=True, blank=True
-    )
-    total_study_minutes = models.FloatField(default=0)  # To track daily study time
+    last_study_date = models.DateField(default=default_last_study_date, null=True, blank=True)
+    total_study_minutes = models.FloatField(default=0)
 
     def add_xp(self, amount):
         self.xp += amount
