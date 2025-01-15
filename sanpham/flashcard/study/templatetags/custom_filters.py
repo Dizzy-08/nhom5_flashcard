@@ -14,3 +14,8 @@ def divided_by(value, arg):
         return float(value) / float(arg)
     except (ValueError, ZeroDivisionError):
         return 0
+
+
+@register.filter
+def subtract(value, arg):
+    return value - arg

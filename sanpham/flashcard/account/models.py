@@ -15,34 +15,51 @@ class Profile(models.Model):
     last_study_date = models.DateField(default=timezone.now, null=True, blank=True)
     total_study_minutes = models.FloatField(default=0)
 
-    def add_xp(self, amount):
-        """Add XP and update level if necessary"""
-        self.xp += amount
-        self.level = (self.xp // 100) + 1
-        self.save()
+    @property
+    def xp_for_next_level(self):
+        """Get XP needed for next level"""
+        return self.calculate_xp_for_level(self.level + 1)
 
-    def update_streak(self, study_date, study_minutes):
-        """Update study streak and minutes"""
+    def calculate_xp_for_level(self, level):
+        """Every 5 levels, XP needed increases by 200"""
+        base_xp = 100
+        tier = (level - 1) // 5  # Which 5-level tier we're in
+        return base_xp + (tier * 200)
+
+    def calculate_level(self):
+        """Calculate level based on total XP"""
+        if self.xp < 100:
+            return 1
+
+        total_xp = 0
+        level = 1
+
+        while total_xp <= self.xp:
+            level += 1
+            total_xp += self.calculate_xp_for_level(level - 1)
+
+        return level - 1
+
+    def add_xp(self, amount):
+        """Add XP and check for level up"""
+        current_level = self.level
+        self.xp += amount
+        self.level = self.calculate_level()
+        self.save()
+        return self.level > current_level
+
+    def update_streak(self, study_date, duration):
+        """Update study streak"""
         days_diff = (
             (study_date - self.last_study_date).days if self.last_study_date else 0
         )
 
-        # Update streak based on consecutive days
-        if self.streak == 0 or days_diff == 1:
+        if days_diff == 1:  # Consecutive day
             self.streak += 1
-        elif days_diff > 1:
+        elif days_diff > 1:  # Missed days
             self.streak = 1
-        # days_diff == 0 means same day, no streak change needed
 
-        # Reset study minutes on new day
-        if days_diff >= 1:
-            self.total_study_minutes = 0
-
-        # Update study date and minutes
         self.last_study_date = study_date
-        self.total_study_minutes = round(
-            self.total_study_minutes + float(study_minutes), 2
-        )
         self.save()
 
     def __str__(self):

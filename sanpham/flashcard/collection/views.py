@@ -78,9 +78,7 @@ def create_card(request, deck_id):
             card = form.save(commit=False)
             card.deck = deck
             card.save()
-            return redirect(
-                "edit_deck", deck_id=deck_id
-            )  # Redirect back to the edit deck page
+            return redirect("create_card", deck_id=deck.id)
     else:
         form = CardForm()
     return render(request, "edit_card.html", {"form": form, "deck": deck})
@@ -94,7 +92,7 @@ def edit_card(request, deck_id, card_id):
         form = CardForm(request.POST, instance=card)
         if form.is_valid():
             form.save()
-            return redirect("edit_deck", deck_id=deck_id)
+            return redirect("edit_deck", deck_id=deck.id)
     else:
         form = CardForm(instance=card)
     return render(request, "edit_card.html", {"form": form, "deck": deck, "card": card})

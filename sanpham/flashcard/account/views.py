@@ -6,11 +6,7 @@ from collection.models import Deck, Card
 from django.contrib.auth import update_session_auth_hash
 from .forms import UserEditForm, PasswordChangeCustomForm
 from django.contrib.auth.decorators import login_required
-import calendar
-from datetime import datetime, timedelta
-import json
-from study.models import StudySession
-from games.models import Boss, BossProgress, UserItem
+from games.models import Boss, BossProgress
 
 
 def signup_view(request):
@@ -49,129 +45,6 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
-
-
-"""
-def home(request):
-    if request.user.is_authenticated:
-        decks = Deck.objects.filter(user=request.user)
-        profile = request.user.profile
-        today = datetime.now().date()
-        year_ago = today - timedelta(days=365)
-
-        study_sessions = StudySession.objects.filter(
-            user=request.user,
-            started_at__gte=year_ago,
-            ended_at__isnull=False,  # Only count completed sessions
-        ).values_list("started_at", flat=True)
-
-        # Create a dictionary of study days
-        study_data = {}
-        for session_datetime in study_sessions:
-            # Convert to date string in YYYY-MM-DD format
-            date_str = session_datetime.strftime("%Y-%m-%d")
-            study_data[date_str] = True
-
-        total_cards = sum(deck.card_set.count() for deck in decks)
-
-        active_boss = Boss.objects.filter(is_active=True).first()
-        if not active_boss:
-            # Create a default boss if none exists
-            active_boss = Boss.objects.create(
-                name="Tutorial Boss",
-                boss_type="CTHULHU",
-                description="A training boss to help you learn the game mechanics.",
-                max_health=1000,
-                current_health=1000,
-                damage_per_study=500,
-            )
-
-        # Reset boss if it's a new day
-        active_boss.reset_boss()
-
-        # Get or create boss progress
-        boss_progress, created = BossProgress.objects.get_or_create(
-            user=request.user, boss=active_boss
-        )
-
-        # Calculate boss health percentage
-        boss_health_percent = (
-            active_boss.current_health / active_boss.max_health
-        ) * 100
-
-        # Get boss icon based on type
-        boss_icons = {
-            "CTHULHU": "fa-skull",
-            "NYARLATHOTEP": "fa-sack-dollar",
-            "HASTUR": "fa-level-down-alt",
-            "YOG-SOTHOTH": "fa-user-secret",
-        }
-        boss_icon = boss_icons.get(active_boss.boss_type, "fa-dragon")
-
-        # Boss ability information
-        boss_abilities = {
-            "CTHULHU": {
-                "icon": "fa-bolt",
-                "name": "XP Drain",
-                "description": "Reduces XP gained from study sessions by 50%",
-                "effect": "Currently earning only 50% of normal XP",
-            },
-            "NYARLATHOTEP": {
-                "icon": "fa-coins",
-                "name": "Gold Rush",
-                "description": "Steals all coins at the end of the day",
-                "effect": "Will steal all coins when day ends",
-            },
-            "HASTUR": {
-                "icon": "fa-level-down",
-                "name": "Level Curse",
-                "description": "Decreases your level by 1 at the end of the day",
-                "effect": "Will reduce level by 1 when day ends",
-            },
-            "YOG-SOTHOTH": {
-                "icon": "fa-mask",
-                "name": "Identity Theft",
-                "description": "Temporarily changes your username",
-                "effect": "Will change username to john_doe_X",
-            },
-        }
-
-        boss_ability = boss_abilities.get(
-            active_boss.boss_type,
-            {
-                "icon": "fa-question",
-                "name": "Unknown Ability",
-                "description": "This boss's powers are mysterious",
-                "effect": None,
-            },
-        )
-
-        # Get active items
-        active_items = UserItem.objects.filter(
-            user=request.user, is_active=True
-        ).select_related("item")
-
-        context = {
-            "decks": decks,
-            "profile": profile,
-            "xp_to_next_level": 100 - (profile.xp % 100),  # XP needed for next level
-            "xp_progress": (profile.xp % 100),  # Progress within current level
-            "study_data": json.dumps(study_data),
-            "total_cards": total_cards,
-            "active_boss": active_boss,
-            "boss_progress": boss_progress,
-            "boss_health_percent": boss_health_percent,
-            "boss_icon": boss_icon,
-            "boss_ability_icon": boss_ability["icon"],
-            "boss_ability_name": boss_ability["name"],
-            "boss_ability_description": boss_ability["description"],
-            "boss_ability_effect": boss_ability["effect"],
-            "active_items": active_items,
-        }
-        return render(request, "home.html", context)
-    else:
-        return redirect("login")
-"""
 
 
 @login_required
@@ -225,20 +98,20 @@ def home(request):
         "NYARLATHOTEP": {
             "icon": "fa-coins",
             "name": "Gold Rush",
-            "description": "Steals all coins at the end of the day",
-            "effect": "Will steal all coins when day ends",
+            "description": "Do nothing?",
+            "effect": "Do nothing?",
         },
         "HASTUR": {
             "icon": "fa-level-down",
-            "name": "Level Curse",
-            "description": "Decreases your level by 1 at the end of the day",
-            "effect": "Will reduce level by 1 when day ends",
+            "name": "Yellow Sign",
+            "description": "No Luck",
+            "effect": "Reduce XP gained each sessions in range of 10-90%",
         },
         "YOG-SOTHOTH": {
             "icon": "fa-mask",
             "name": "Identity Theft",
-            "description": "Temporarily changes your username",
-            "effect": "Will change username to john_doe_X",
+            "description": "Temporarily remove your username",
+            "effect": "Remove your username",
         },
     }
 
@@ -251,11 +124,6 @@ def home(request):
             "effect": None,
         },
     )
-
-    # Get active items
-    active_items = UserItem.objects.filter(
-        user=request.user, is_active=True
-    ).select_related("item")
 
     context = {
         "profile": profile,
@@ -270,7 +138,6 @@ def home(request):
         "boss_ability_name": boss_ability["name"],
         "boss_ability_description": boss_ability["description"],
         "boss_ability_effect": boss_ability["effect"],
-        "active_items": active_items,
     }
 
     return render(request, "home.html", context)

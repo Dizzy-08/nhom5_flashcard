@@ -5,17 +5,26 @@ from collection.models import Deck, Card
 from .models import StudySession, CardProgress
 from django.contrib import messages
 from django.utils import timezone
-from datetime import datetime, timedelta
-import json
 
 
 @login_required
 def start_study_session(request, deck_id):
-    if "current_card_index" in request.session:
-        del request.session["current_card_index"]
+    # Clear any existing session data
+    for key in ["current_card_index", "shuffled_card_ids"]:
+        if key in request.session:
+            del request.session[key]
+
     deck = get_object_or_404(Deck, pk=deck_id, user=request.user)
     study_session = StudySession.objects.create(user=request.user, deck=deck)
+
+    # Get all card IDs and shuffle them
+    card_ids = list(Card.objects.filter(deck=deck).values_list("id", flat=True))
+    random.shuffle(card_ids)
+
+    # Store shuffled card IDs in session
+    request.session["shuffled_card_ids"] = card_ids
     request.session["session_start_time"] = timezone.now().timestamp()
+
     return redirect("study_session", session_id=study_session.id)
 
 
@@ -23,19 +32,31 @@ def start_study_session(request, deck_id):
 def study_session(request, session_id):
     study_session = get_object_or_404(StudySession, pk=session_id, user=request.user)
     deck = study_session.deck
-    if deck.card_set.count() < 4:
+
+    # Get shuffled card IDs from session
+    shuffled_card_ids = request.session.get("shuffled_card_ids")
+    if not shuffled_card_ids:
+        # If somehow lost, recreate shuffled order
+        shuffled_card_ids = list(
+            Card.objects.filter(deck=deck).values_list("id", flat=True)
+        )
+        random.shuffle(shuffled_card_ids)
+        request.session["shuffled_card_ids"] = shuffled_card_ids
+
+    if len(shuffled_card_ids) < 4:
         messages.error(
             request, "You need at least 4 cards in this deck to start studying."
         )
         return redirect("home")
 
-    cards = list(Card.objects.filter(deck=study_session.deck))
     current_card_index = request.session.get("current_card_index", 0)
-    current_card = cards[current_card_index]
+    current_card = get_object_or_404(Card, pk=shuffled_card_ids[current_card_index])
 
-    other_cards = random.sample(cards, 3)
-    while current_card in other_cards:
-        other_cards = random.sample(cards, 3)
+    # Get other random cards for multiple choice, excluding current card
+    other_card_ids = [id for id in shuffled_card_ids if id != current_card.id]
+    other_cards = list(Card.objects.filter(pk__in=random.sample(other_card_ids, 3)))
+
+    # Combine and shuffle all options
     all_cards = [current_card] + other_cards
     random.shuffle(all_cards)
 
@@ -44,7 +65,7 @@ def study_session(request, session_id):
         "current_card": current_card,
         "all_cards": all_cards,
         "current_card_number": current_card_index + 1,
-        "total_cards": len(cards),
+        "total_cards": len(shuffled_card_ids),
     }
     return render(request, "study_session.html", context)
 
@@ -52,11 +73,10 @@ def study_session(request, session_id):
 @login_required
 def check_answer(request, session_id):
     study_session = get_object_or_404(StudySession, pk=session_id, user=request.user)
-    cards = list(Card.objects.filter(deck=study_session.deck))
+    shuffled_card_ids = request.session.get("shuffled_card_ids", [])
     current_card_index = request.session.get("current_card_index", 0)
-    current_card = cards[current_card_index]
 
-    # Get the selected card
+    current_card = get_object_or_404(Card, pk=shuffled_card_ids[current_card_index])
     selected_card_id = int(request.POST.get("selected_card"))
 
     if selected_card_id == current_card.id:
@@ -69,15 +89,19 @@ def check_answer(request, session_id):
 
         # Check if session is complete
         if CardProgress.objects.filter(study_session=study_session).count() == len(
-            cards
+            shuffled_card_ids
         ):
-            # End the session and get XP gained
+            # End session and calculate XP
             xp_gained = study_session.end_session()
             profile = request.user.profile
 
             # Clean up session
-            request.session.pop("session_start_time", None)
-            request.session.pop("current_card_index", None)
+            for key in [
+                "session_start_time",
+                "current_card_index",
+                "shuffled_card_ids",
+            ]:
+                request.session.pop(key, None)
 
             # Calculate duration
             duration_minutes = round(
@@ -86,12 +110,10 @@ def check_answer(request, session_id):
                 2,
             )
 
-            # Show completion message
             messages.success(
                 request,
                 f"Session completed! You earned {xp_gained} XP and now have {profile.xp} XP (Level {profile.level})",
             )
-            print(f"XP gained {xp_gained}")
 
             return render(
                 request,
@@ -107,10 +129,9 @@ def check_answer(request, session_id):
             )
 
         # Move to next card
-        current_card_index = (current_card_index + 1) % len(cards)
+        current_card_index = (current_card_index + 1) % len(shuffled_card_ids)
         request.session["current_card_index"] = current_card_index
         return redirect("study_session", session_id=session_id)
-
     else:
         messages.error(request, "Incorrect answer. Try again!")
         return redirect("study_session", session_id=session_id)

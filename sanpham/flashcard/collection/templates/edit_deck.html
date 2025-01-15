@@ -95,6 +95,18 @@
                 <h3 class="mb-0">
                   <i class="fas fa-cards me-2"></i> Cards
                 </h3>
+                                  <!-- Search Bar -->
+                  <div class="input-group me-2" style="width: 250px;">
+                      <span class="input-group-text bg-white border-end-0" style="height: 31px;">
+                          <i class="fas fa-search text-muted"></i>
+                      </span>
+                      <input type="text" 
+                            id="cardSearch" 
+                            class="form-control border-start-0 ps-0" 
+                            placeholder="Search cards..."
+                            style="height: 31px; border-radius: 0 8px 8px 0;">
+                  </div>
+
                 <div>
                   <a href="{% url 'create_card' deck.id %}" class="btn add-btn">
                     <i class="fas fa-plus"></i> Add Card
@@ -117,7 +129,7 @@
                     </thead>
                     <tbody>
                       {% for card in deck.card_set.all %}
-                        <tr>
+                        <tr class="card-card">
                           <td>{{ card.front }}</td>
                           <td>{{ card.back }}</td>
                           <td>
@@ -146,4 +158,27 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('cardSearch');
+    const deckCards = document.querySelectorAll('.card-card');
+    
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        let hasVisibleCards = false;
+        
+        deckCards.forEach(card => {
+            // Get text content from the first two cells (front and back)
+            const front = card.children[0].textContent.toLowerCase();
+            const back = card.children[1].textContent.toLowerCase();
+            const isMatch = front.includes(searchTerm) || back.includes(searchTerm);
+            
+            card.style.display = isMatch ? '' : 'none';
+            if (isMatch) hasVisibleCards = true;
+        });
+    });
+});
+</script>
+
+
 {% endblock %}

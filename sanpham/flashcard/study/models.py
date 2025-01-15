@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from collection.models import Deck, Card
 from django.utils import timezone
-from datetime import datetime
 from games.models import Boss, BossProgress
 
 
@@ -58,10 +57,24 @@ class StudySession(models.Model):
                     user=self.user, boss=new_boss, damage_dealt=0
                 )
 
+            if duration > 2:
+                xp_gained -= 40
+            elif duration > 1:
+                xp_gained -= 20
+            elif duration > 0.5:
+                xp_gained -= 10
+            elif duration < 0.2:
+                xp_gained += 30
+
+            if profile.total_study_minutes > 5:
+                xp_gained += 10
+            elif profile.total_study_minutes > 10:
+                xp_gained += 20
+
             # Apply boss ability effects
             xp_multiplier = active_boss.apply_effect(profile)
 
-            # Apply XP reduction if the boss is XP_REDUCER
+            # Apply XP reduction if the boss is CTHULHU
             if xp_multiplier:
                 xp_gained = int(base_xp * xp_multiplier)
 
